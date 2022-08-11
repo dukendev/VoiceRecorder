@@ -1,7 +1,11 @@
 package com.ysanjeet535.voicerecorder
 
+import android.Manifest
 import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
 import android.content.ServiceConnection
+import android.content.pm.PackageManager
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.os.Build
@@ -24,7 +28,6 @@ import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -38,6 +41,8 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
+import com.ysanjeet535.voicerecorder.services.ACTION_START_FOREGROUND_SERVICE
 import com.ysanjeet535.voicerecorder.services.AudioService
 import com.ysanjeet535.voicerecorder.ui.theme.VoiceRecorderTheme
 import com.ysanjeet535.voicerecorder.ui.theme.blueDark
@@ -105,19 +110,19 @@ class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onStart() {
         super.onStart()
-//        val intent = Intent(this, AudioService::class.java)
-//        intent.action = ACTION_START_FOREGROUND_SERVICE
-//        if (ActivityCompat.checkSelfPermission(
-//                this,
-//                Manifest.permission.RECORD_AUDIO
-//            ) != PackageManager.PERMISSION_GRANTED
-//        ) {
-//            requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), 0)
-//        } else {
-//            startService(intent)
-//            bindService(intent, connection, Context.BIND_AUTO_CREATE)
-//
-//        }
+        val intent = Intent(this, AudioService::class.java)
+        intent.action = ACTION_START_FOREGROUND_SERVICE
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.RECORD_AUDIO
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), 0)
+        } else {
+            startService(intent)
+            bindService(intent, connection, Context.BIND_AUTO_CREATE)
+
+        }
 
     }
 
@@ -205,7 +210,11 @@ fun CircularTimerView(viewModel: TimerViewModel) {
                 Button(onClick = {
                     viewModel.startTimer()
                 }, modifier = Modifier.width(40.dp)) {
-                    Icon(painter = painterResource(id = R.drawable.ic_record), contentDescription = null, tint = Color.Red)
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_record),
+                        contentDescription = null,
+                        tint = Color.Red
+                    )
                 }
 
                 Button(
