@@ -11,24 +11,33 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.Button
+import androidx.compose.material.Icon
+import androidx.compose.material.Surface
+import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Send
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.ThumbUp
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.ysanjeet535.voicerecorder.services.AudioService
 import com.ysanjeet535.voicerecorder.ui.theme.VoiceRecorderTheme
+import com.ysanjeet535.voicerecorder.ui.theme.blueDark
+import com.ysanjeet535.voicerecorder.ui.theme.blueLight
+import com.ysanjeet535.voicerecorder.ui.theme.greyLight
 import com.ysanjeet535.voicerecorder.viewModels.TimerViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import me.nikhilchaudhari.library.neumorphic
+import me.nikhilchaudhari.library.shapes.Pot
+import me.nikhilchaudhari.library.shapes.Punched
 
 
 @AndroidEntryPoint
@@ -57,8 +66,9 @@ class MainActivity : ComponentActivity() {
             VoiceRecorderTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colors.background
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    color = greyLight
                 ) {
                     val viewModel: TimerViewModel by viewModels()
                     CircularTimerView(viewModel)
@@ -107,22 +117,51 @@ fun CircularTimerView(viewModel: TimerViewModel) {
 
     val time by viewModel.timerValue.observeAsState()
 
+    Box(
+        modifier = Modifier
+            .height(80.dp)
+            .wrapContentWidth(Alignment.CenterHorizontally)
+            .padding(32.dp)
+            .neumorphic(
+                neuShape =
+                Pot.Rounded(radius = 64.dp),
+                lightShadowColor = blueLight,
+                darkShadowColor = blueDark
+            )
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(64.dp)
+                .neumorphic(
+                    neuShape =
+                    Punched.Rounded(radius = 32.dp)
+                )
+        ) {
 
+            Box(modifier = Modifier.padding(32.dp)) {
+                Text(text = "Time ${time?.convertSecondsToHMmSs()}", color = Color.Black)
+            }
 
-    Row {
-        Button(onClick = {
-            viewModel.stopTimer()
-        }) {
-            Icon(Icons.Default.Close, contentDescription = null)
+            Row(modifier = Modifier.padding(32.dp)) {
+                Button(onClick = {
+                    viewModel.stopTimer()
+                }) {
+                    Icon(Icons.Default.Close, contentDescription = null)
+                }
+
+                Button(onClick = {
+                    viewModel.startTimer()
+                }) {
+                    Icon(Icons.Default.Send, contentDescription = null)
+                }
+
+                Button(onClick = {
+                    viewModel.pauseTimer()
+                }) {
+                    Icon(Icons.Default.ThumbUp, contentDescription = null)
+                }
+            }
         }
-
-        Button(onClick = {
-            viewModel.startTimer()
-        }) {
-            Icon(Icons.Default.Send, contentDescription = null)
-        }
-
-        Text(text = "Time $time")
     }
 }
 
@@ -132,4 +171,11 @@ fun DefaultPreview() {
     VoiceRecorderTheme {
 //        CircularTimerView()
     }
+}
+
+fun Long.convertSecondsToHMmSs(): String {
+    val s = this % 60
+    val m = this / 60 % 60
+    val h = this / (60 * 60) % 24
+    return String.format("%d:%02d:%02d", h, m, s)
 }
