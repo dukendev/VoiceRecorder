@@ -44,9 +44,11 @@ import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import com.ysanjeet535.voicerecorder.services.ACTION_START_FOREGROUND_SERVICE
 import com.ysanjeet535.voicerecorder.services.AudioService
+import com.ysanjeet535.voicerecorder.ui.composables.EliteButtons
 import com.ysanjeet535.voicerecorder.ui.theme.VoiceRecorderTheme
 import com.ysanjeet535.voicerecorder.ui.theme.blueDark
 import com.ysanjeet535.voicerecorder.ui.theme.lightWhite
+import com.ysanjeet535.voicerecorder.utils.convertSecondsToHMmSs
 import com.ysanjeet535.voicerecorder.viewModels.TimerViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import me.nikhilchaudhari.library.NeuInsets
@@ -226,6 +228,8 @@ fun CircularTimerView(viewModel: TimerViewModel) {
                     Icon(Icons.Default.ThumbUp, contentDescription = null)
                 }
             }
+
+            EliteButtons(iconId = R.drawable.ic_record) {}
         }
     }
 }
@@ -234,13 +238,6 @@ fun CircularTimerView(viewModel: TimerViewModel) {
 @Composable
 fun DefaultPreview() {
     VoiceRecorderTheme {
-//        CircularTimerView()
+        EliteButtons {}
     }
-}
-
-fun Long.convertSecondsToHMmSs(): String {
-    val s = this % 60
-    val m = this / 60 % 60
-    val h = this / (60 * 60) % 24
-    return String.format("%d:%02d:%02d", h, m, s)
 }
