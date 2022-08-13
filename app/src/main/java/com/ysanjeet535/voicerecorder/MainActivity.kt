@@ -10,7 +10,6 @@ import android.media.AudioManager
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.os.IBinder
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -205,12 +204,11 @@ fun PlayerView(getSessionId: () -> Int?, onPlay: () -> Unit, onStopPlayer: () ->
 
     Column(
         modifier = Modifier
-            .size(200.dp)
+            .size(400.dp)
             .padding(8.dp)
             .clip(
                 RoundedCornerShape(corner = CornerSize(8.dp))
-            )
-            .height(64.dp),
+            ),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -218,25 +216,23 @@ fun PlayerView(getSessionId: () -> Int?, onPlay: () -> Unit, onStopPlayer: () ->
         if (sessionId != null) {
             AndroidView(
                 modifier = Modifier
-                    .size(80.dp)
-                ,
+                    .width(160.dp)
+                    .height(160.dp),
                 factory = {
-                    AudioVisualizerView(context).apply {
-                        setColor()
-                        setDensityValue()
-                        setPlayerId(sessionId)
-                    }
+                    AudioVisualizerView(context)
                 }
             ) {
-                it.setPlayerId(sessionId)
+                it.apply {
+                    setColor()
+                    setDensityValue()
+                    setPlayerId(sessionId)
+                }
             }
-
         }
 
         EliteButtons(isPressed = false, label = "Play") {
             onPlay()
             sessionId = getSessionId()
-            Toast.makeText(context,"$sessionId",Toast.LENGTH_LONG).show()
         }
         Spacer(modifier = Modifier.size(8.dp))
         EliteButtons(isPressed = false, label = "Stop") {
