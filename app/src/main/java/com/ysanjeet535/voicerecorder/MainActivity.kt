@@ -1,11 +1,7 @@
 package com.ysanjeet535.voicerecorder
 
-import android.Manifest
 import android.content.ComponentName
-import android.content.Context
-import android.content.Intent
 import android.content.ServiceConnection
-import android.content.pm.PackageManager
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.os.Build
@@ -21,16 +17,11 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Button
-import androidx.compose.material.Icon
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.ThumbUp
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,11 +29,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.app.ActivityCompat
-import com.ysanjeet535.voicerecorder.services.ACTION_START_FOREGROUND_SERVICE
 import com.ysanjeet535.voicerecorder.services.AudioService
 import com.ysanjeet535.voicerecorder.ui.composables.EliteButtons
 import com.ysanjeet535.voicerecorder.ui.theme.VoiceRecorderTheme
@@ -112,19 +100,19 @@ class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onStart() {
         super.onStart()
-        val intent = Intent(this, AudioService::class.java)
-        intent.action = ACTION_START_FOREGROUND_SERVICE
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.RECORD_AUDIO
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), 0)
-        } else {
-            startService(intent)
-            bindService(intent, connection, Context.BIND_AUTO_CREATE)
-
-        }
+//        val intent = Intent(this, AudioService::class.java)
+//        intent.action = ACTION_START_FOREGROUND_SERVICE
+//        if (ActivityCompat.checkSelfPermission(
+//                this,
+//                Manifest.permission.RECORD_AUDIO
+//            ) != PackageManager.PERMISSION_GRANTED
+//        ) {
+//            requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), 0)
+//        } else {
+//            startService(intent)
+//            bindService(intent, connection, Context.BIND_AUTO_CREATE)
+//
+//        }
 
     }
 
@@ -198,38 +186,90 @@ fun CircularTimerView(viewModel: TimerViewModel) {
                 )
 
             }
+            RecordControlButtons(viewModel)
+        }
+    }
+}
 
-            Row(
-                modifier = Modifier.padding(32.dp),
-                horizontalArrangement = Arrangement.SpaceAround
-            ) {
-                Button(onClick = {
-                    viewModel.stopTimer()
-                }, modifier = Modifier.width(40.dp)) {
-                    Icon(Icons.Default.Close, contentDescription = null)
-                }
+@Composable
+fun RecordControlButtons(viewModel: TimerViewModel) {
 
-                Button(onClick = {
-                    viewModel.startTimer()
-                }, modifier = Modifier.width(40.dp)) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_record),
-                        contentDescription = null,
-                        tint = Color.Red
-                    )
-                }
+    var isPressedStop by remember {
+        mutableStateOf(false)
+    }
 
-                Button(
-                    onClick = {
-                        viewModel.pauseTimer()
-                    },
-                    modifier = Modifier.width(40.dp)
-                ) {
-                    Icon(Icons.Default.ThumbUp, contentDescription = null)
-                }
+    var isPressedRecord by remember {
+        mutableStateOf(false)
+    }
+
+
+    var isPressedTogglePause by remember {
+        mutableStateOf(false)
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+            .clip(
+                RoundedCornerShape(corner = CornerSize(8.dp))
+            ),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+
+        EliteButtons(iconId = R.drawable.ic_stop, label = "Stop", isPressed = isPressedStop) {
+            //stop function
+            viewModel.stopTimer()
+            isPressedStop = !isPressedStop
+            //switch other buttons
+            if (isPressedRecord) {
+                isPressedRecord = !isPressedRecord
+            }
+            if (isPressedTogglePause) {
+                isPressedTogglePause = !isPressedTogglePause
+            }
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        EliteButtons(
+            iconId = R.drawable.ic_record,
+            iconTint = Color.Red,
+            label = "Record",
+            isPressed = isPressedRecord
+        ) {
+            if (isPressedRecord) {
+                return@EliteButtons
+            }
+            //start record function
+            viewModel.startTimer()
+
+            isPressedRecord = !isPressedRecord
+            //switch other buttons
+            if (isPressedStop) {
+                isPressedStop = !isPressedStop
+            }
+            if (isPressedTogglePause) {
+                isPressedTogglePause = !isPressedTogglePause
             }
 
-            EliteButtons(iconId = R.drawable.ic_record) {}
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        EliteButtons(
+            iconId = if (!isPressedTogglePause) R.drawable.ic_pause else R.drawable.ic_play,
+            label = if (!isPressedTogglePause) "Pause Recording" else "Resume Recording",
+            isPressed = isPressedTogglePause
+        ) {
+            isPressedTogglePause = !isPressedTogglePause
+            //switch other buttons
+            if (isPressedStop) {
+                isPressedStop = !isPressedStop
+            }
+
+            if (isPressedTogglePause) {
+                viewModel.toggleTimer(true)
+            } else {
+                viewModel.toggleTimer(false)
+            }
         }
     }
 }
@@ -238,6 +278,6 @@ fun CircularTimerView(viewModel: TimerViewModel) {
 @Composable
 fun DefaultPreview() {
     VoiceRecorderTheme {
-        EliteButtons {}
+        EliteButtons(isPressed = true) {}
     }
 }

@@ -23,16 +23,15 @@ import me.nikhilchaudhari.library.shapes.Punched
 @Composable
 fun EliteButtons(
     iconId: Int? = null,
+    iconTint : Color = Color.Black,
     label: String = "Record",
+    isPressed: Boolean,
     onClick: () -> Unit
 ) {
-    var isPressed by remember {
-        mutableStateOf(false)
-    }
     Box(
         modifier = Modifier
             .height(44.dp)
-            .wrapContentWidth(unbounded = true)
+            .wrapContentWidth(unbounded = false)
             .clip(RoundedCornerShape(corner = CornerSize(16.dp)))
             .background(lightWhite)
             .neumorphic(
@@ -41,12 +40,11 @@ fun EliteButtons(
                 } else {
                     Punched.Rounded(radius = 16.dp)
                 },
-                neuInsets = NeuInsets(horizontal = 16.dp, vertical = 16.dp)
+                neuInsets = NeuInsets(horizontal = 8.dp, vertical = 8.dp)
             )
             .padding(8.dp)
             .clickable {
                 onClick()
-                isPressed = !isPressed
             }
     ) {
         Row(
@@ -60,7 +58,7 @@ fun EliteButtons(
                 Icon(
                     painter = painterResource(id = iconId),
                     contentDescription = "record icon",
-                    tint = Color.Black
+                    tint = iconTint
                 )
                 Spacer(modifier = Modifier.width(8.dp))
             }

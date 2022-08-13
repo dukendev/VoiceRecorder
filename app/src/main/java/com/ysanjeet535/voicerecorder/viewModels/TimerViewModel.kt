@@ -6,7 +6,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -22,6 +21,9 @@ class TimerViewModel @Inject constructor() : ViewModel() {
     var job: Job? = null
 
     fun startTimer() {
+        if (job?.isActive == true) {
+            return
+        }
         job = viewModelScope.launch {
             while (true) {
                 delay(1000)
@@ -36,10 +38,19 @@ class TimerViewModel @Inject constructor() : ViewModel() {
         job?.cancel()
         startTime = 0
         _timerValue.postValue(0)
+        if (job?.isCancelled == true) {
+            job = null
+        }
     }
 
-    fun pauseTimer() {
-        job?.cancel()
-        _timerValue.postValue(startTime)
+    fun toggleTimer(isPaused: Boolean) {
+        if (isPaused) {
+            job?.cancel()
+            _timerValue.postValue(startTime)
+        } else {
+            job?.start()
+            startTimer()
+            _timerValue.postValue(startTime)
+        }
     }
 }
