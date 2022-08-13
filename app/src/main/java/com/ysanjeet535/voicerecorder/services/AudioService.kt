@@ -137,13 +137,13 @@ class AudioService : Service() {
         }
     }
 
-    private fun startRecording() {
+    fun startRecording() {
         initRecorder()
         mediaRecorder?.start()
 
     }
 
-    private fun stopRecording() {
+    fun stopRecording() {
         mediaRecorder?.apply {
             stop()
             release()
@@ -151,7 +151,7 @@ class AudioService : Service() {
         mediaRecorder = null
     }
 
-    private fun togglePause() {
+    fun togglePause() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             if (!isPaused) {
                 mediaRecorder?.pause()

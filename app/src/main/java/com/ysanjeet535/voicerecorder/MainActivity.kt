@@ -1,16 +1,18 @@
 package com.ysanjeet535.voicerecorder
 
+import android.Manifest
 import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
 import android.content.ServiceConnection
+import android.content.pm.PackageManager
 import android.media.AudioManager
 import android.media.MediaPlayer
-import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -32,6 +34,8 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
+import com.ysanjeet535.voicerecorder.services.ACTION_START_FOREGROUND_SERVICE
 import com.ysanjeet535.voicerecorder.services.AudioService
 import com.ysanjeet535.voicerecorder.ui.composables.EliteButtons
 import com.ysanjeet535.voicerecorder.ui.theme.VoiceRecorderTheme
@@ -67,6 +71,12 @@ class MainActivity : ComponentActivity() {
 
     private var mediaPlayer: MediaPlayer? = null
 
+    override fun onStart() {
+        super.onStart()
+        bindAudioServiceWithPermission()
+
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -78,7 +88,20 @@ class MainActivity : ComponentActivity() {
                     color = lightWhite
                 ) {
                     val viewModel: TimerViewModel by viewModels()
-                    CircularTimerView(viewModel)
+                    MainContent(
+                        viewModel = viewModel,
+                        onPlay = { startRecorded() },
+                        onToggleRecord = {
+                            mService.togglePause()
+                        },
+                        onStop = {
+                            mService.stopRecording()
+                            stopAudioService()
+                        },
+                        onRecord = {
+                            mService.startRecording()
+                        }
+                    )
                 }
             }
         }
@@ -98,29 +121,80 @@ class MainActivity : ComponentActivity() {
         mService.stopRecorderService()
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
-    override fun onStart() {
-        super.onStart()
-//        val intent = Intent(this, AudioService::class.java)
-//        intent.action = ACTION_START_FOREGROUND_SERVICE
-//        if (ActivityCompat.checkSelfPermission(
-//                this,
-//                Manifest.permission.RECORD_AUDIO
-//            ) != PackageManager.PERMISSION_GRANTED
-//        ) {
-//            requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), 0)
-//        } else {
-//            startService(intent)
-//            bindService(intent, connection, Context.BIND_AUTO_CREATE)
-//
-//        }
-
+    private fun bindAudioServiceWithPermission() {
+        val intent = Intent(this, AudioService::class.java)
+        intent.action = ACTION_START_FOREGROUND_SERVICE
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.RECORD_AUDIO
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), 0)
+        } else {
+            startService(intent)
+            bindService(intent, connection, Context.BIND_AUTO_CREATE)
+        }
     }
 
 }
 
+
 @Composable
-fun CircularTimerView(viewModel: TimerViewModel) {
+fun MainContent(
+    viewModel: TimerViewModel,
+    onRecord: () -> Unit = {},
+    onStop: () -> Unit = {},
+    onToggleRecord: () -> Unit = {},
+    onPlay: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(8.dp)
+            .clip(
+                RoundedCornerShape(corner = CornerSize(8.dp))
+            ),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        CircularTimerView(viewModel = viewModel)
+//        RecordControlButtons(
+//            viewModel = viewModel,
+//            onRecord = { onRecord() },
+//            onStop = { onStop() },
+//            onToggleRecord = { onToggleRecord() },
+//        )
+//        PlayerView {
+//            onPlay()
+//        }
+    }
+}
+
+
+@Composable
+fun PlayerView(onPlay: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+            .clip(
+                RoundedCornerShape(corner = CornerSize(8.dp))
+            )
+            .height(64.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        EliteButtons(isPressed = false, label = "play") {
+            onPlay()
+        }
+    }
+}
+
+
+@Composable
+fun CircularTimerView(
+    viewModel: TimerViewModel
+) {
 
     val time by viewModel.timerValue.observeAsState()
 
@@ -131,13 +205,13 @@ fun CircularTimerView(viewModel: TimerViewModel) {
 
     Box(
         modifier = Modifier
-            .height(80.dp)
-            .wrapContentWidth(Alignment.CenterHorizontally)
+            .fillMaxSize()
             .clip(RoundedCornerShape(64.dp))
             .background(lightWhite)
     ) {
         Column(
             modifier = Modifier
+                .fillMaxSize()
                 .padding(64.dp)
                 .clip(RoundedCornerShape(32.dp))
                 .neumorphic(
@@ -187,13 +261,17 @@ fun CircularTimerView(viewModel: TimerViewModel) {
                     )
                 )
             }
-            RecordControlButtons(viewModel)
         }
     }
 }
 
 @Composable
-fun RecordControlButtons(viewModel: TimerViewModel) {
+fun RecordControlButtons(
+    viewModel: TimerViewModel,
+    onRecord: () -> Unit = {},
+    onStop: () -> Unit = {},
+    onToggleRecord: () -> Unit = {},
+) {
 
     var isPressedStop by remember {
         mutableStateOf(false)
@@ -210,16 +288,20 @@ fun RecordControlButtons(viewModel: TimerViewModel) {
 
     Column(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp)
+            .fillMaxSize()
             .clip(
                 RoundedCornerShape(corner = CornerSize(8.dp))
-            ),
+            )
+            .padding(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
 
         EliteButtons(iconId = R.drawable.ic_stop, label = "Stop", isPressed = isPressedStop) {
+            if (isPressedStop) {
+                return@EliteButtons
+            }
+            onStop()
             //stop function
             viewModel.stopTimer()
             isPressedStop = !isPressedStop
@@ -244,6 +326,9 @@ fun RecordControlButtons(viewModel: TimerViewModel) {
             //start record function
             viewModel.startTimer()
 
+            //record
+            onRecord()
+
             isPressedRecord = !isPressedRecord
             //switch other buttons
             if (isPressedStop) {
@@ -260,6 +345,9 @@ fun RecordControlButtons(viewModel: TimerViewModel) {
             label = if (!isPressedTogglePause) "Pause Recording" else "Resume Recording",
             isPressed = isPressedTogglePause
         ) {
+
+            onToggleRecord()
+
             isPressedTogglePause = !isPressedTogglePause
             //switch other buttons
             if (isPressedStop) {
@@ -273,6 +361,7 @@ fun RecordControlButtons(viewModel: TimerViewModel) {
             }
         }
     }
+
 }
 
 @Preview(showBackground = true)
