@@ -6,8 +6,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,7 +24,7 @@ import me.nikhilchaudhari.library.shapes.Punched
 @Composable
 fun EliteButtons(
     iconId: Int? = null,
-    iconTint : Color = Color.Black,
+    iconTint: Color = Color.Black,
     label: String = "Record",
     isPressed: Boolean,
     onClick: () -> Unit
@@ -62,7 +63,7 @@ fun EliteButtons(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
             }
-            Text(text = label, color = Color.Black)
+            Text(text = label, color = Color.Black, style = MaterialTheme.typography.button)
         }
     }
 }

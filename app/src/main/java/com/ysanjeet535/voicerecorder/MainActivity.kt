@@ -19,6 +19,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
@@ -179,12 +180,12 @@ fun CircularTimerView(viewModel: TimerViewModel) {
 
                 Text(
                     text = "${time?.convertSecondsToHMmSs()}",
+                    style = MaterialTheme.typography.h1,
                     color = Color.Black,
                     modifier = Modifier.align(
                         Alignment.Center
                     )
                 )
-
             }
             RecordControlButtons(viewModel)
         }
