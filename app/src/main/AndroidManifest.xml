@@ -4,7 +4,8 @@
     package="com.ysanjeet535.voicerecorder">
 
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
 
     <application
         android:name=".VoiceRecorderApp"
@@ -28,9 +29,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name=".services.AudioService"
-            android:exported="true"
-            android:enabled="true"/>
+        <service
+            android:name=".services.AudioService"
+            android:enabled="true"
+            android:exported="true" />
     </application>
 
 </manifest>

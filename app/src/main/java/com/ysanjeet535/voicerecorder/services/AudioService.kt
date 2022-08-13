@@ -11,6 +11,8 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import com.ysanjeet535.voicerecorder.R
 import java.io.IOException
 
@@ -37,6 +39,9 @@ class AudioService : Service() {
     private var fileName: String? = null
     private var isPaused: Boolean = false
     private var timeElapsced: Float = 0f
+
+    private val _isRecorded = MutableLiveData(false)
+    val isRecorded: LiveData<Boolean> get() = _isRecorded
 
     override fun onBind(intent: Intent?): IBinder {
         fileName = "${externalCacheDir?.absolutePath}/audiorecordtest.mp3"
@@ -138,12 +143,14 @@ class AudioService : Service() {
     }
 
     fun startRecording() {
+        _isRecorded.postValue(false)
         initRecorder()
         mediaRecorder?.start()
 
     }
 
     fun stopRecording() {
+        _isRecorded.postValue(true)
         mediaRecorder?.apply {
             stop()
             release()

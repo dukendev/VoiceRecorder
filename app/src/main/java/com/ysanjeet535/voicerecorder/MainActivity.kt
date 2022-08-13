@@ -10,9 +10,11 @@ import android.media.AudioManager
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.os.IBinder
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -32,12 +34,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.app.ActivityCompat
 import com.ysanjeet535.voicerecorder.services.ACTION_START_FOREGROUND_SERVICE
 import com.ysanjeet535.voicerecorder.services.AudioService
 import com.ysanjeet535.voicerecorder.ui.composables.EliteButtons
+import com.ysanjeet535.voicerecorder.ui.customViews.AudioVisualizerView
 import com.ysanjeet535.voicerecorder.ui.theme.VoiceRecorderTheme
 import com.ysanjeet535.voicerecorder.ui.theme.blueDark
 import com.ysanjeet535.voicerecorder.ui.theme.lightWhite
@@ -86,9 +91,11 @@ class MainActivity : ComponentActivity() {
                     color = lightWhite
                 ) {
                     val viewModel: TimerViewModel by viewModels()
+
                     MainContent(
                         viewModel = viewModel,
                         onPlay = { playRecordedAudio() },
+                        getSessionId = { getMediaPlayerSessionId() },
                         onToggleRecord = {
                             mService.togglePause()
                         },
@@ -104,6 +111,8 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    private fun getMediaPlayerSessionId(): Int? = mediaPlayer?.audioSessionId
 
     private fun playRecordedAudio() {
         mediaPlayer = MediaPlayer()
@@ -140,11 +149,16 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainContent(
     viewModel: TimerViewModel,
+    getSessionId: () -> Int?,
     onRecord: () -> Unit = {},
     onStop: () -> Unit = {},
     onToggleRecord: () -> Unit = {},
     onPlay: () -> Unit
 ) {
+
+    var isPlayerMode by remember {
+        mutableStateOf(false)
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -156,24 +170,42 @@ fun MainContent(
         verticalArrangement = Arrangement.Center
     ) {
         CircularTimerView(viewModel = viewModel)
-        RecordControlButtons(
-            viewModel = viewModel,
-            onRecord = { onRecord() },
-            onStop = { onStop() },
-            onToggleRecord = { onToggleRecord() },
-        )
-        PlayerView {
-            onPlay()
+        AnimatedVisibility(visible = !isPlayerMode) {
+            RecordControlButtons(
+                viewModel = viewModel,
+                onRecord = { onRecord() },
+                onStop = {
+                    onStop()
+                    isPlayerMode = !isPlayerMode
+                },
+                onToggleRecord = { onToggleRecord() },
+            )
+        }
+        AnimatedVisibility(visible = isPlayerMode) {
+            PlayerView(
+                getSessionId = getSessionId,
+                onPlay = {
+                    onPlay()
+                },
+                onStopPlayer = {
+                    isPlayerMode = !isPlayerMode
+                }
+            )
         }
     }
 }
 
 
 @Composable
-fun PlayerView(onPlay: () -> Unit) {
+fun PlayerView(getSessionId: () -> Int?, onPlay: () -> Unit, onStopPlayer: () -> Unit) {
+
+    var sessionId: Int? by remember {
+        mutableStateOf(null)
+    }
+
     Column(
         modifier = Modifier
-            .size(100.dp)
+            .size(200.dp)
             .padding(8.dp)
             .clip(
                 RoundedCornerShape(corner = CornerSize(8.dp))
@@ -182,11 +214,48 @@ fun PlayerView(onPlay: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        EliteButtons(isPressed = false, label = "play") {
+        val context = LocalContext.current
+        if (sessionId != null) {
+            AndroidView(
+                modifier = Modifier
+                    .size(80.dp)
+                ,
+                factory = {
+                    AudioVisualizerView(context).apply {
+                        setColor()
+                        setDensityValue()
+                        setPlayerId(sessionId)
+                    }
+                }
+            ) {
+                it.setPlayerId(sessionId)
+            }
+
+        }
+
+        EliteButtons(isPressed = false, label = "Play") {
             onPlay()
+            sessionId = getSessionId()
+            Toast.makeText(context,"$sessionId",Toast.LENGTH_LONG).show()
+        }
+        Spacer(modifier = Modifier.size(8.dp))
+        EliteButtons(isPressed = false, label = "Stop") {
+            onStopPlayer()
         }
     }
 }
+
+//@Composable
+//fun rememberCustomView(getSessionId: () -> Int?): AudioVisualizerView {
+//    val context = LocalContext.current
+//    return remember {
+//        AudioVisualizerView(context).apply {
+//            setColor()
+//            setDensityValue()
+//            setPlayerId(getSessionId())
+//        }
+//    }
+//}
 
 
 @Composable
@@ -241,66 +310,6 @@ fun CircularTimerView(
         )
     }
 
-//    Box(
-//        modifier = Modifier
-//            .fillMaxSize()
-//            .clip(RoundedCornerShape(64.dp))
-//            .background(lightWhite)
-//    ) {
-//        Column(
-//            modifier = Modifier
-//                .fillMaxSize()
-//                .padding(64.dp)
-//                .clip(RoundedCornerShape(32.dp))
-//                .neumorphic(
-//                    neuShape =
-//                    Punched.Rounded(radius = 32.dp)
-//                )
-//                .background(lightWhite),
-//            horizontalAlignment = Alignment.CenterHorizontally
-//        ) {
-//
-//            Box(
-//                modifier = Modifier
-//                    .size(200.dp)
-//                    .padding(32.dp)
-//                    .clip(shape = RoundedCornerShape(96.dp))
-//                    .neumorphic(
-//                        neuShape = Pot(cornerType = CornerType.Rounded(radius = 320.dp)),
-//                        neuInsets = NeuInsets(8.dp, 8.dp),
-//                        elevation = 12.dp
-//                    )
-//                    .background(lightWhite)
-//            ) {
-//
-//                Canvas(
-//                    modifier = Modifier
-//                        .size(120.dp)
-//                        .padding(8.dp)
-//                        .align(Alignment.Center)
-//                ) {
-//
-//                    drawArc(
-//                        color = blueDark,
-//                        startAngle = -90f,
-//                        sweepAngle = angle.value,
-//                        useCenter = false,
-//                        style = Stroke(width = 20f, cap = StrokeCap.Round)
-//                    )
-//
-//                }
-//
-//                Text(
-//                    text = "${time?.convertSecondsToHMmSs()}",
-//                    style = MaterialTheme.typography.h1,
-//                    color = Color.Black,
-//                    modifier = Modifier.align(
-//                        Alignment.Center
-//                    )
-//                )
-//            }
-//        }
-//    }
 }
 
 @Composable
