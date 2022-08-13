@@ -48,7 +48,6 @@ import me.nikhilchaudhari.library.NeuInsets
 import me.nikhilchaudhari.library.neumorphic
 import me.nikhilchaudhari.library.shapes.CornerType
 import me.nikhilchaudhari.library.shapes.Pot
-import me.nikhilchaudhari.library.shapes.Punched
 
 
 @AndroidEntryPoint
@@ -74,7 +73,6 @@ class MainActivity : ComponentActivity() {
     override fun onStart() {
         super.onStart()
         bindAudioServiceWithPermission()
-
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -90,7 +88,7 @@ class MainActivity : ComponentActivity() {
                     val viewModel: TimerViewModel by viewModels()
                     MainContent(
                         viewModel = viewModel,
-                        onPlay = { startRecorded() },
+                        onPlay = { playRecordedAudio() },
                         onToggleRecord = {
                             mService.togglePause()
                         },
@@ -107,7 +105,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun startRecorded() {
+    private fun playRecordedAudio() {
         mediaPlayer = MediaPlayer()
         mediaPlayer?.apply {
             setAudioStreamType(AudioManager.STREAM_MUSIC)
@@ -158,15 +156,15 @@ fun MainContent(
         verticalArrangement = Arrangement.Center
     ) {
         CircularTimerView(viewModel = viewModel)
-//        RecordControlButtons(
-//            viewModel = viewModel,
-//            onRecord = { onRecord() },
-//            onStop = { onStop() },
-//            onToggleRecord = { onToggleRecord() },
-//        )
-//        PlayerView {
-//            onPlay()
-//        }
+        RecordControlButtons(
+            viewModel = viewModel,
+            onRecord = { onRecord() },
+            onStop = { onStop() },
+            onToggleRecord = { onToggleRecord() },
+        )
+        PlayerView {
+            onPlay()
+        }
     }
 }
 
@@ -175,7 +173,7 @@ fun MainContent(
 fun PlayerView(onPlay: () -> Unit) {
     Column(
         modifier = Modifier
-            .fillMaxWidth()
+            .size(100.dp)
             .padding(8.dp)
             .clip(
                 RoundedCornerShape(corner = CornerSize(8.dp))
@@ -205,64 +203,104 @@ fun CircularTimerView(
 
     Box(
         modifier = Modifier
-            .fillMaxSize()
-            .clip(RoundedCornerShape(64.dp))
+            .size(200.dp)
+            .padding(32.dp)
+            .clip(shape = RoundedCornerShape(96.dp))
+            .neumorphic(
+                neuShape = Pot(cornerType = CornerType.Rounded(radius = 320.dp)),
+                neuInsets = NeuInsets(8.dp, 8.dp),
+                elevation = 12.dp
+            )
             .background(lightWhite)
     ) {
-        Column(
+
+        Canvas(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(64.dp)
-                .clip(RoundedCornerShape(32.dp))
-                .neumorphic(
-                    neuShape =
-                    Punched.Rounded(radius = 32.dp)
-                )
-                .background(lightWhite),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .size(120.dp)
+                .padding(8.dp)
+                .align(Alignment.Center)
         ) {
 
-            Box(
-                modifier = Modifier
-                    .size(200.dp)
-                    .padding(32.dp)
-                    .clip(shape = RoundedCornerShape(96.dp))
-                    .neumorphic(
-                        neuShape = Pot(cornerType = CornerType.Rounded(radius = 320.dp)),
-                        neuInsets = NeuInsets(8.dp, 8.dp),
-                        elevation = 12.dp
-                    )
-                    .background(lightWhite)
-            ) {
+            drawArc(
+                color = blueDark,
+                startAngle = -90f,
+                sweepAngle = angle.value,
+                useCenter = false,
+                style = Stroke(width = 20f, cap = StrokeCap.Round)
+            )
 
-                Canvas(
-                    modifier = Modifier
-                        .size(120.dp)
-                        .padding(8.dp)
-                        .align(Alignment.Center)
-                ) {
-
-                    drawArc(
-                        color = blueDark,
-                        startAngle = -90f,
-                        sweepAngle = angle.value,
-                        useCenter = false,
-                        style = Stroke(width = 20f, cap = StrokeCap.Round)
-                    )
-
-                }
-
-                Text(
-                    text = "${time?.convertSecondsToHMmSs()}",
-                    style = MaterialTheme.typography.h1,
-                    color = Color.Black,
-                    modifier = Modifier.align(
-                        Alignment.Center
-                    )
-                )
-            }
         }
+
+        Text(
+            text = "${time?.convertSecondsToHMmSs()}",
+            style = MaterialTheme.typography.h1,
+            color = Color.Black,
+            modifier = Modifier.align(
+                Alignment.Center
+            )
+        )
     }
+
+//    Box(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .clip(RoundedCornerShape(64.dp))
+//            .background(lightWhite)
+//    ) {
+//        Column(
+//            modifier = Modifier
+//                .fillMaxSize()
+//                .padding(64.dp)
+//                .clip(RoundedCornerShape(32.dp))
+//                .neumorphic(
+//                    neuShape =
+//                    Punched.Rounded(radius = 32.dp)
+//                )
+//                .background(lightWhite),
+//            horizontalAlignment = Alignment.CenterHorizontally
+//        ) {
+//
+//            Box(
+//                modifier = Modifier
+//                    .size(200.dp)
+//                    .padding(32.dp)
+//                    .clip(shape = RoundedCornerShape(96.dp))
+//                    .neumorphic(
+//                        neuShape = Pot(cornerType = CornerType.Rounded(radius = 320.dp)),
+//                        neuInsets = NeuInsets(8.dp, 8.dp),
+//                        elevation = 12.dp
+//                    )
+//                    .background(lightWhite)
+//            ) {
+//
+//                Canvas(
+//                    modifier = Modifier
+//                        .size(120.dp)
+//                        .padding(8.dp)
+//                        .align(Alignment.Center)
+//                ) {
+//
+//                    drawArc(
+//                        color = blueDark,
+//                        startAngle = -90f,
+//                        sweepAngle = angle.value,
+//                        useCenter = false,
+//                        style = Stroke(width = 20f, cap = StrokeCap.Round)
+//                    )
+//
+//                }
+//
+//                Text(
+//                    text = "${time?.convertSecondsToHMmSs()}",
+//                    style = MaterialTheme.typography.h1,
+//                    color = Color.Black,
+//                    modifier = Modifier.align(
+//                        Alignment.Center
+//                    )
+//                )
+//            }
+//        }
+//    }
 }
 
 @Composable
@@ -288,7 +326,7 @@ fun RecordControlButtons(
 
     Column(
         modifier = Modifier
-            .fillMaxSize()
+            .size(300.dp)
             .clip(
                 RoundedCornerShape(corner = CornerSize(8.dp))
             )

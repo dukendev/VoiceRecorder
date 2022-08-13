@@ -10,10 +10,8 @@ import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
-import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import com.ysanjeet535.voicerecorder.R
-import java.io.File
 import java.io.IOException
 
 
@@ -125,8 +123,10 @@ class AudioService : Service() {
     private fun initRecorder() {
         mediaRecorder = MediaRecorder().apply {
             setAudioSource(MediaRecorder.AudioSource.MIC)
-            setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
-            setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
+            setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+            setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+            setAudioEncodingBitRate(16)
+            setAudioSamplingRate(96000)
             setOutputFile(fileName)
 
             try {
