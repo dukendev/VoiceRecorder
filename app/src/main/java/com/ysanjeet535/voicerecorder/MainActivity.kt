@@ -38,6 +38,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.app.ActivityCompat
+import androidx.navigation.NavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.ysanjeet535.voicerecorder.services.ACTION_START_FOREGROUND_SERVICE
 import com.ysanjeet535.voicerecorder.services.AudioService
 import com.ysanjeet535.voicerecorder.ui.composables.EliteButtons
@@ -90,22 +94,32 @@ class MainActivity : ComponentActivity() {
                     color = lightWhite
                 ) {
                     val viewModel: TimerViewModel by viewModels()
+                    val navController = rememberNavController()
 
-                    MainContent(
-                        viewModel = viewModel,
-                        onPlay = { playRecordedAudio() },
-                        getSessionId = { getMediaPlayerSessionId() },
-                        onToggleRecord = {
-                            mService.togglePause()
-                        },
-                        onStop = {
-                            mService.stopRecording()
-                            stopAudioService()
-                        },
-                        onRecord = {
-                            mService.startRecording()
+                    NavHost(navController = navController, startDestination = "main_screen") {
+                        composable("main_screen") {
+                            MainContent(
+                                viewModel = viewModel,
+                                navController = navController,
+                                onPlay = { playRecordedAudio() },
+                                getSessionId = { getMediaPlayerSessionId() },
+                                onToggleRecord = {
+                                    mService.togglePause()
+                                },
+                                onStop = {
+                                    mService.stopRecording()
+                                    stopAudioService()
+                                },
+                                onRecord = {
+                                    mService.startRecording()
+                                }
+                            )
                         }
-                    )
+                        composable("setting_screen") {
+                            SettingContent()
+                        }
+                    }
+
                 }
             }
         }
@@ -148,6 +162,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainContent(
     viewModel: TimerViewModel,
+    navController: NavController,
     getSessionId: () -> Int?,
     onRecord: () -> Unit = {},
     onStop: () -> Unit = {},
@@ -168,7 +183,12 @@ fun MainContent(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        CircularTimerView(viewModel = viewModel)
+        EliteButtons(isPressed = false, label = "Setting") {
+            navController.navigate("setting_screen")
+        }
+        AnimatedVisibility(visible = !isPlayerMode) {
+            CircularTimerView(viewModel = viewModel)
+        }
         AnimatedVisibility(visible = !isPlayerMode) {
             RecordControlButtons(
                 viewModel = viewModel,
@@ -405,6 +425,13 @@ fun RecordControlButtons(
         }
     }
 
+}
+
+@Composable
+fun SettingContent() {
+    Surface(modifier = Modifier.fillMaxSize()) {
+        Text(text = "Setting Screen")
+    }
 }
 
 @Preview(showBackground = true)
