@@ -4,4 +4,4 @@ voice recorder using foreground service to keep recording on background.
 
 ### Preview
 
-![Screenshot_20221012-141017839](https://user-images.githubusercontent.com/87947328/195295892-c3069bd4-fcee-43fc-8c3f-676e71b019ae.jpg)
+![Screenshot_20221012-143117473](https://user-images.githubusercontent.com/87947328/195299532-1bf60605-368d-43fd-94d6-4d43da3564cc.jpg)
