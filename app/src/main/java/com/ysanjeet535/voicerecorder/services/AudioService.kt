@@ -111,8 +111,8 @@ class AudioService : Service() {
         )
         builder.apply {
             setSmallIcon(R.mipmap.ic_launcher_round)
-            setContentTitle("Wise Audio Recorder")
-            setContentText("Audio is being recorded for attachment")
+            setContentTitle("Simple Audio Recorder")
+            setContentText("Your Audio is being recorded in the background")
             addAction(NotificationCompat.Action(R.drawable.ic_stop, "STOP", stopPendingIntent))
             addAction(NotificationCompat.Action(0, "END", stopRecordingPendingIntent))
             addAction(NotificationCompat.Action(0, "RECORD", startRecordingPendingIntent))
